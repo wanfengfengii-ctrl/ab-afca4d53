@@ -1,0 +1,63 @@
+services:
+  api:
+    build:
+      context: ./backend
+    image: cave-leveling-api:latest
+    ports:
+      # host port configurable via API_PORT; uvicorn always listens on 8000
+      - "${API_PORT:-8000}:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).status == 200 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  web:
+    build:
+      context: ./frontend
+    image: cave-leveling-web:latest
+    environment:
+      # nginx listens on this port *inside* the container and compose maps
+      # the same host port; override both with WEB_PORT in .env.
+      WEB_PORT: ${WEB_PORT:-8080}
+    ports:
+      - "${WEB_PORT:-8080}:${WEB_PORT:-8080}"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:${WEB_PORT}/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  # One-shot verification: starts only with the "verify" profile, after both
+  # services are healthy, then runs backend tests, frontend tests + build and
+  # an API closure smoke test.  Exits non-zero (aggregated) on any failure.
+  # Run with:  docker compose --profile verify up --build verify
+  verify:
+    build:
+      context: ./verify
+    image: cave-leveling-verify:latest
+    profiles: ["verify"]
+    environment:
+      API_BASE: http://api:8000
+      WEB_BASE: http://web:${WEB_PORT:-8080}
+      WEB_PORT: ${WEB_PORT:-8080}
+    volumes:
+      - ./backend:/src/backend
+      - ./frontend:/src/frontend
+      - frontend_node_modules:/src/frontend/node_modules
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  frontend_node_modules:

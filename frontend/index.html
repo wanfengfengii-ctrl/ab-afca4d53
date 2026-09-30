@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>洞穴水准高程网配平</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>洞穴水准高程网配平</h1>
+        <p class="subtitle">
+          联合选择全部整数高程（mm），依次最小化：最大绝对改正量 → 绝对改正量总和 → 按测站录入顺序展开的高程序列。
+        </p>
+      </header>
+
+      <section class="card">
+        <h2>1. 基准设置</h2>
+        <div class="row">
+          <label>
+            API 地址
+            <input id="apiBase" type="text" value="" placeholder="默认同源 /api" />
+          </label>
+          <label>
+            基准高程（整数毫米）
+            <input id="benchmarkHeight" type="number" step="1" value="1000" required />
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2. 测站（5–10 个，名称唯一，勾选一个基准）</h2>
+        <table class="input-table">
+          <thead>
+            <tr><th>序号</th><th>测站名称</th><th>基准点</th><th>操作</th></tr>
+          </thead>
+          <tbody id="stationsBody"></tbody>
+        </table>
+        <button type="button" id="addStation" class="secondary">＋ 添加测站</button>
+      </section>
+
+      <section class="card">
+        <h2>3. 往返水准观测（7–18 条，带方向）</h2>
+        <table class="input-table">
+          <thead>
+            <tr>
+              <th>#</th><th>起点</th><th>终点</th>
+              <th>实测高差 Δh（mm）</th><th>最大允许改正量（mm）</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="observationsBody"></tbody>
+        </table>
+        <button type="button" id="addObservation" class="secondary">＋ 添加观测</button>
+      </section>
+
+      <section class="actions">
+        <button type="button" id="submitBtn" class="primary">提交配平</button>
+        <button type="button" id="resetBtn" class="secondary">恢复示例</button>
+        <span id="draftHint" class="draft-hint" hidden>草稿已修改，旧结果已失效。</span>
+      </section>
+
+      <section id="resultPanel" class="card result" hidden>
+        <h2>配平结果</h2>
+        <div id="summary" class="summary"></div>
+
+        <div id="elevationBlock">
+          <h3>各站高程（按录入顺序）</h3>
+          <table class="output-table">
+            <thead><tr><th>测站</th><th>高程（mm）</th></tr></thead>
+            <tbody id="elevationsBody"></tbody>
+          </table>
+        </div>
+
+        <div id="correctionBlock">
+          <h3>逐观测改正与回算高差</h3>
+          <table class="output-table">
+            <thead>
+              <tr>
+                <th>#</th><th>起点</th><th>终点</th>
+                <th>实测 Δh</th><th>改正 c</th><th>回算高差</th><th>限值</th>
+              </tr>
+            </thead>
+            <tbody id="correctionsBody"></tbody>
+          </table>
+        </div>
+
+        <div id="loopsBlock">
+          <h3>环路闭合核验</h3>
+          <p class="hint">对图的基本环路（生成树之外的余枝各对应一环）累加回算高差，均应为 0：</p>
+          <table class="output-table">
+            <thead><tr><th>环路</th><th>闭合差（mm）</th></tr></thead>
+            <tbody id="loopsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
