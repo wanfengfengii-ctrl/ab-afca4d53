@@ -10,4 +10,7 @@ __pycache__/
 .tox/
 .nox/
 .pnpm-store/
+.npm-cache/
+web/dist/
+*.log
 *.py[cod]
